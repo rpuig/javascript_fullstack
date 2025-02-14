@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Image Grid</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            width: 80vw;
+            height: 80vh;
+        }
+        .grid-item {
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            cursor: pointer;
+            transition: background-image 0.5s ease-in-out;
+
+            
+    width: 100%;
+    height: 100%;
+
+        }
+    </style>
+</head>
+<body>
+
+    <div class="grid-container" id="grid"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            const grid = document.getElementById("grid");
+
+            // Fetch the list of images from the server
+            async function fetchImages() {
+                try {
+                    const response = await fetch("/get-images");
+                    const images = await response.json();
+                    return images.map(img => `/img/${img}`); // Prepend folder path
+                } catch (error) {
+                    console.error("Error fetching images:", error);
+                    return [];
+                }
+            }
+
+            // Function to get a random image from the list
+            function getRandomImage(images) {
+                return images[Math.floor(Math.random() * images.length)];
+            }
+
+            // Function to load a random image into a div
+            function loadRandomImage(div, images) {
+                const randomImage = getRandomImage(images);
+                div.style.backgroundImage = `url('${randomImage}')`;
+                div.title = randomImage.split("/").pop(); // Show filename on hover
+            }
+
+            // Initialize grid items
+            async function initGrid() {
+                const images = await fetchImages();
+                if (images.length === 0) return;
+
+                for (let i = 0; i < 9; i++) {
+                    const div = document.createElement("div");
+                    div.classList.add("grid-item");
+                    grid.appendChild(div);
+
+                    // Load initial image
+                    loadRandomImage(div, images);
+
+                    // Set a random interval for refreshing the image
+                    function setRandomInterval() {
+                        const randomTime = Math.floor(Math.random() * (15000 - 5000 + 1)) + 5000; // Between 5s to 15s
+                        setTimeout(function refreshImage() {
+                            loadRandomImage(div, images);
+                            setRandomInterval(); // Recursively set a new random interval
+                        }, randomTime);
+                    }
+
+                    setRandomInterval();
+                }
+            }
+
+            initGrid();
+        });
+    </script>
+
+</body>
+</html>
